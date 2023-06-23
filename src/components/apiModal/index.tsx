@@ -53,18 +53,7 @@ function APIModal(props: { setApiKey: any; sidebar?: boolean }) {
   return (
     <>
       {sidebar ? (
-        <Button
-          onClick={onOpen}
-          display="flex"
-          variant="api"
-          fontSize={'sm'}
-          fontWeight="600"
-          borderRadius={'45px'}
-          mt="8px"
-          minH="40px"
-        >
-          Set API Key
-        </Button>
+        <></>
       ) : (
         <Button
           onClick={onOpen}

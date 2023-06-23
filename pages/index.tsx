@@ -23,6 +23,8 @@ import {
 import { useEffect, useState } from 'react';
 import { MdAutoAwesome, MdBolt, MdEdit, MdPerson } from 'react-icons/md';
 import Bg from '../public/img/chat/bg-image.png';
+import * as signalR from '@microsoft/signalr';
+import axios from 'axios';
 
 export default function Chat(props: { apiKeyApp: string }) {
   // *** If you use .env.local variable for your API key, method which we recommend, use the apiKey variable commented below
@@ -32,6 +34,10 @@ export default function Chat(props: { apiKeyApp: string }) {
   const [inputCode, setInputCode] = useState<string>('');
   // Response message
   const [outputCode, setOutputCode] = useState<string>('');
+
+  // Chat messages
+  const [chatHistory, setChatHistory] = useState<{role:string, message:string}[]>([]);
+
   // ChatGPT model
   const [model, setModel] = useState<OpenAIModel>('gpt-3.5-turbo');
   // Loading state
@@ -58,102 +64,79 @@ export default function Chat(props: { apiKeyApp: string }) {
     { color: 'gray.500' },
     { color: 'whiteAlpha.600' },
   );
+
+  useEffect(() => {
+    let connection = new signalR.HubConnectionBuilder()
+      .withUrl('https://localhost:7225/agentHub', {
+        withCredentials: false,
+        transport: signalR.HttpTransportType.LongPolling,
+      })
+      .withAutomaticReconnect()
+      .build();
+
+      connection.start().catch((err) => console.error(err.toString()));
+
+      connection.on('agent_info', (data) => {
+        const goals = data.goals.map((goal: string) => `- ${goal}\n`).join('');
+        addMessage('agent', goals);
+      });
+
+      connection.on('thoughts', (response) => {
+        let message = `
+          Text: ${response.text}\n
+          Reasoning: ${response.reasoning}\n
+          Plan: ${response.plan}\n
+        `;
+        // let message = `
+        //   Text: ${response.text}\n
+        //   Reasoning: ${response.reasoning}\n
+        //   Plan: ${response.plan}\n
+        //   Criticism: ${response.criticism}\n
+        //   Speak: ${response.speak}\n\n
+        // `;
+        addMessage('agent', message);
+      });
+
+      connection.on('respond', (response) => {
+        addMessage('agent', response);
+        setLoading(false);
+      });
+
+  }, []);
+  
   const handleTranslate = async () => {
-    const apiKey = apiKeyApp;
+    let input = document.getElementById('input') as HTMLInputElement;
     setInputOnSubmit(inputCode);
+    addMessage('user', inputCode);
+    input.value = '';
 
-    // Chat post conditions(maximum number of characters, valid message etc.)
-    const maxCodeLength = model === 'gpt-3.5-turbo' ? 700 : 700;
-
-    if (!apiKeyApp?.includes('sk-') && !apiKey?.includes('sk-')) {
-      alert('Please enter an API key.');
-      return;
-    }
-
-    if (!inputCode) {
-      alert('Please enter your message.');
-      return;
-    }
-
-    if (inputCode.length > maxCodeLength) {
-      alert(
-        `Please enter code less than ${maxCodeLength} characters. You are currently at ${inputCode.length} characters.`,
-      );
-      return;
-    }
-    setOutputCode(' ');
     setLoading(true);
-    const controller = new AbortController();
-    const body: ChatBody = {
-      inputCode,
-      model,
-      apiKey,
-    };
-
-    // -------------- Fetch --------------
-    const response = await fetch('/api/chatAPI', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      signal: controller.signal,
-      body: JSON.stringify(body),
-    });
-
-    if (!response.ok) {
-      setLoading(false);
-      if (response) {
-        alert(
-          'Something went wrong went fetching from the API. Make sure to use a valid API key.',
-        );
+    axios.post('https://localhost:7225/getreplyfromagent', {
+      userGUIdString: "4949C1A2-AEA5-4B75-BFEE-A0A80F80032E",
+      agentGUIdString: "E8D6B1FD-AA69-41E1-97BE-B9755C1FA7A6",
+      userPrompt: inputCode
+    })
+    .then((response) => {
+      addMessage('agent', response.data.agentReply);
+      if (response.data.agentReply !== 'Thinking...') {
+        setLoading(false);
       }
-      return;
-    }
-
-    const data = response.body;
-
-    if (!data) {
+    })
+    .catch((err) => {
+      console.error(err.toString());
       setLoading(false);
-      alert('Something went wrong');
-      return;
-    }
-
-    const reader = data.getReader();
-    const decoder = new TextDecoder();
-    let done = false;
-
-    while (!done) {
-      setLoading(true);
-      const { value, done: doneReading } = await reader.read();
-      done = doneReading;
-      const chunkValue = decoder.decode(value);
-      setOutputCode((prevCode) => prevCode + chunkValue);
-    }
-
-    setLoading(false);
+    });
   };
-  // -------------- Copy Response --------------
-  // const copyToClipboard = (text: string) => {
-  //   const el = document.createElement('textarea');
-  //   el.value = text;
-  //   document.body.appendChild(el);
-  //   el.select();
-  //   document.execCommand('copy');
-  //   document.body.removeChild(el);
-  // };
-
-  // *** Initializing apiKey with .env.local value
-  // useEffect(() => {
-  // ENV file verison
-  // const apiKeyENV = process.env.NEXT_PUBLIC_OPENAI_API_KEY
-  // if (apiKey === undefined || null) {
-  //   setApiKey(apiKeyENV)
-  // }
-  // }, [])
 
   const handleChange = (Event: any) => {
     setInputCode(Event.target.value);
   };
+
+  const addMessage = (role: string, message: string) => {
+      setChatHistory((prevHistory) => [...prevHistory, { role, message }]);
+      let element = document.getElementById('chatbox');
+      element.scrollTop = element.scrollHeight + 200;
+  }
 
   return (
     <Flex
@@ -177,168 +160,45 @@ export default function Chat(props: { apiKeyApp: string }) {
         minH={{ base: '75vh', '2xl': '85vh' }}
         maxW="1000px"
       >
-        {/* Model Change */}
-        <Flex direction={'column'} w="100%" mb={outputCode ? '20px' : 'auto'}>
-          <Flex
-            mx="auto"
-            zIndex="2"
-            w="max-content"
-            mb="20px"
-            borderRadius="60px"
-          >
-            <Flex
-              cursor={'pointer'}
-              transition="0.3s"
-              justify={'center'}
-              align="center"
-              bg={model === 'gpt-3.5-turbo' ? buttonBg : 'transparent'}
-              w="174px"
-              h="70px"
-              boxShadow={model === 'gpt-3.5-turbo' ? buttonShadow : 'none'}
-              borderRadius="14px"
-              color={textColor}
-              fontSize="18px"
-              fontWeight={'700'}
-              onClick={() => setModel('gpt-3.5-turbo')}
-            >
-              <Flex
-                borderRadius="full"
-                justify="center"
-                align="center"
-                bg={bgIcon}
-                me="10px"
-                h="39px"
-                w="39px"
-              >
-                <Icon
-                  as={MdAutoAwesome}
-                  width="20px"
-                  height="20px"
-                  color={iconColor}
-                />
-              </Flex>
-              GPT-3.5
-            </Flex>
-            <Flex
-              cursor={'pointer'}
-              transition="0.3s"
-              justify={'center'}
-              align="center"
-              bg={model === 'gpt-4' ? buttonBg : 'transparent'}
-              w="164px"
-              h="70px"
-              boxShadow={model === 'gpt-4' ? buttonShadow : 'none'}
-              borderRadius="14px"
-              color={textColor}
-              fontSize="18px"
-              fontWeight={'700'}
-              onClick={() => setModel('gpt-4')}
-            >
-              <Flex
-                borderRadius="full"
-                justify="center"
-                align="center"
-                bg={bgIcon}
-                me="10px"
-                h="39px"
-                w="39px"
-              >
-                <Icon
-                  as={MdBolt}
-                  width="20px"
-                  height="20px"
-                  color={iconColor}
-                />
-              </Flex>
-              GPT-4
-            </Flex>
-          </Flex>
-
-          <Accordion color={gray} allowToggle w="100%" my="0px" mx="auto">
-            <AccordionItem border="none">
-              <AccordionButton
-                borderBottom="0px solid"
-                maxW="max-content"
-                mx="auto"
-                _hover={{ border: '0px solid', bg: 'none' }}
-                _focus={{ border: '0px solid', bg: 'none' }}
-              >
-                <Box flex="1" textAlign="left">
-                  <Text color={gray} fontWeight="500" fontSize="sm">
-                    No plugins added
-                  </Text>
-                </Box>
-                <AccordionIcon color={gray} />
-              </AccordionButton>
-              <AccordionPanel mx="auto" w="max-content" p="0px 0px 10px 0px">
-                <Text
-                  color={gray}
-                  fontWeight="500"
-                  fontSize="sm"
-                  textAlign={'center'}
-                >
-                  This is a cool text example.
-                </Text>
-              </AccordionPanel>
-            </AccordionItem>
-          </Accordion>
-        </Flex>
         {/* Main Box */}
-        <Flex
-          direction="column"
-          w="100%"
-          mx="auto"
-          display={outputCode ? 'flex' : 'none'}
-          mb={'auto'}
-        >
-          <Flex w="100%" align={'center'} mb="10px">
-            <Flex
-              borderRadius="full"
-              justify="center"
-              align="center"
-              bg={'transparent'}
-              border="1px solid"
-              borderColor={borderColor}
-              me="20px"
-              h="40px"
-              minH="40px"
-              minW="40px"
+        <Flex direction="column"
+            id="chatbox"
+            w="100%"
+            h="700px"
+            mx="auto"
+            display={'flex'}
+            mb={'auto'}
+          overflowY={'scroll'}
             >
-              <Icon
-                as={MdPerson}
-                width="20px"
-                height="20px"
-                color={brandColor}
-              />
-            </Flex>
-            <Flex
-              p="22px"
-              border="1px solid"
-              borderColor={borderColor}
-              borderRadius="14px"
-              w="100%"
-              zIndex={'2'}
-            >
-              <Text
-                color={textColor}
-                fontWeight="600"
-                fontSize={{ base: 'sm', md: 'md' }}
-                lineHeight={{ base: '24px', md: '26px' }}
+          {chatHistory.map((message, index) => {
+            return <>
+              <Flex
+            direction="column"
+            w="100%"
+            mx="auto"
+            display={'flex'}
+          >
+            <Flex w="100%" align={'center'} mb="10px">
+            {message.role === 'user' ? <Flex
+                borderRadius="full"
+                justify="center"
+                align="center"
+                bg={'transparent'}
+                border="1px solid"
+                borderColor={borderColor}
+                me="20px"
+                h="40px"
+                minH="40px"
+                minW="40px"
               >
-                {inputOnSubmit}
-              </Text>
-              <Icon
-                cursor="pointer"
-                as={MdEdit}
-                ms="auto"
-                width="20px"
-                height="20px"
-                color={gray}
-              />
-            </Flex>
-          </Flex>
-          <Flex w="100%">
-            <Flex
+                <Icon
+                  as={MdPerson}
+                  width="20px"
+                  height="20px"
+                  color={brandColor}
+                />
+              </Flex>
+              : <Flex
               borderRadius="full"
               justify="center"
               align="center"
@@ -355,8 +215,30 @@ export default function Chat(props: { apiKeyApp: string }) {
                 color="white"
               />
             </Flex>
-            <MessageBoxChat output={outputCode} />
-          </Flex>
+          }
+              <Flex
+                p="22px"
+                border="1px solid"
+                borderColor={borderColor}
+                borderRadius="14px"
+                w="100%"
+                zIndex={'2'}
+              >
+                <Text
+                  color={textColor}
+                  fontWeight="600"
+                  fontSize={{ base: 'sm', md: 'md' }}
+                  lineHeight={{ base: '24px', md: '26px' }}
+                  whiteSpace={'pre-wrap'}
+                >
+                  {message.message.toString()}
+                </Text>
+              </Flex>
+            </Flex>
+            </Flex>
+            </>
+            })
+          }
         </Flex>
         {/* Chat Input */}
         <Flex
@@ -365,6 +247,7 @@ export default function Chat(props: { apiKeyApp: string }) {
           justifySelf={'flex-end'}
         >
           <Input
+            id="input"
             minH="54px"
             h="100%"
             border="1px solid"
@@ -401,30 +284,9 @@ export default function Chat(props: { apiKeyApp: string }) {
             onClick={handleTranslate}
             isLoading={loading ? true : false}
           >
-            Submit
+            Submit {loading}
           </Button>
-        </Flex>
-
-        <Flex
-          justify="center"
-          mt="20px"
-          direction={{ base: 'column', md: 'row' }}
-          alignItems="center"
-        >
-          <Text fontSize="xs" textAlign="center" color={gray}>
-            Free Research Preview. ChatGPT may produce inaccurate information
-            about people, places, or facts.
-          </Text>
-          <Link href="https://help.openai.com/en/articles/6825453-chatgpt-release-notes">
-            <Text
-              fontSize="xs"
-              color={textColor}
-              fontWeight="500"
-              textDecoration="underline"
-            >
-              ChatGPT May 12 Version
-            </Text>
-          </Link>
+          {loading}
         </Flex>
       </Flex>
     </Flex>

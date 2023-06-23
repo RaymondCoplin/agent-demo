@@ -34,7 +34,6 @@ function App({ Component, pageProps }: AppProps<{}>) {
           float="right"
           minHeight="100vh"
           height="100%"
-          overflow="auto"
           position="relative"
           maxHeight="100%"
           w={{ base: '100%', xl: 'calc( 100% - 290px )' }}
@@ -44,17 +43,8 @@ function App({ Component, pageProps }: AppProps<{}>) {
           transitionProperty="top, bottom, width"
           transitionTimingFunction="linear, linear, ease"
         >
-          <Portal>
-            <Box>
-              <Navbar
-                setApiKey={setApiKey}
-                onOpen={onOpen}
-                logoText={'Horizon UI Dashboard PRO'}
-                brandText={getActiveRoute(routes, pathname)}
-                secondary={getActiveNavbar(routes, pathname)}
-              />
-            </Box>
-          </Portal>
+          {/* <Portal>
+          </Portal> */}
           <Box
             mx="auto"
             p={{ base: '20px', md: '30px' }}

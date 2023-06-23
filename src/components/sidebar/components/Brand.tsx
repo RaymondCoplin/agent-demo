@@ -11,8 +11,8 @@ export function SidebarBrand() {
 
   return (
     <Flex alignItems="center" flexDirection="column">
-      <HorizonLogo h="26px" w="146px" my="30px" color={logoColor} />
-      <HSeparator mb="20px" w="284px" />
+      AP Demo
+      <HSeparator mt="20px" mb="20px" w="284px" />
     </Flex>
   );
 }

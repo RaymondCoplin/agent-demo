@@ -303,67 +303,31 @@ export function SidebarLinks(props: SidebarLinksProps) {
                 </HStack>
               </Flex>
             ) : (
-              <ListItem ms={0} cursor="not-allowed" opacity={'0.4'}>
-                <Flex ps="32px" alignItems="center" mb="8px">
-                  <Text
-                    color={
-                      route.disabled
-                        ? gray
-                        : activeRoute(route.path.toLowerCase())
-                        ? activeColor
-                        : inactiveColor
-                    }
-                    fontWeight="500"
-                    fontSize="xs"
-                  >
-                    {route.name}
-                  </Text>
-                </Flex>
-              </ListItem>
+              <></>
+              // <ListItem ms={0} cursor="not-allowed" opacity={'0.4'}>
+              //   <Flex ps="32px" alignItems="center" mb="8px">
+              //     <Text
+              //       color={
+              //         route.disabled
+              //           ? gray
+              //           : activeRoute(route.path.toLowerCase())
+              //           ? activeColor
+              //           : inactiveColor
+              //       }
+              //       fontWeight="500"
+              //       fontSize="xs"
+              //     >
+              //       {route.name}
+              //     </Text>
+              //   </Flex>
+              // </ListItem>
             )}
           </>
         );
       }
     });
   };
-  // this function creates the links from the secondary accordions (for example auth -> sign-in -> default)
-  const createAccordionLinks = (routes: IRoute[]) => {
-    return routes.map((route: IRoute, key: number) => {
-      return (
-        <ListItem
-          ms="28px"
-          display="flex"
-          alignItems="center"
-          mb="10px"
-          key={key}
-          cursor="not-allowed"
-        >
-          <Icon
-            w="6px"
-            h="6px"
-            me="8px"
-            as={FaCircle}
-            color={route.disabled ? gray : activeIcon}
-          />
-          <Text
-            color={
-              route.disabled
-                ? gray
-                : activeRoute(route.path.toLowerCase())
-                ? activeColor
-                : inactiveColor
-            }
-            fontWeight={
-              activeRoute(route.path.toLowerCase()) ? 'bold' : 'normal'
-            }
-            fontSize="sm"
-          >
-            {route.name}
-          </Text>
-        </ListItem>
-      );
-    });
-  };
+
   //  BRAND
   return <>{createLinks(routes)}</>;
 }

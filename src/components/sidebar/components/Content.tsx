@@ -16,7 +16,7 @@ import {
 } from '@chakra-ui/react';
 import NavLink from '@/components/link/NavLink';
 //   Custom components
-import avatar4 from '/public/img/avatars/avatar4.png';
+import avatar4 from '/public/img/avatars/avatar4.jpg';
 import { NextAvatar } from '@/components/image/Avatar';
 import APIModal from '@/components/apiModal';
 import Brand from '@/components/sidebar/components/Brand';
@@ -71,7 +71,7 @@ function SidebarContent(props: SidebarContent) {
       </Stack>
 
       <Box mt="60px" width={'100%'} display={'flex'} justifyContent={'center'}>
-        <SidebarCard />
+        {/* <SidebarCard /> */}
       </Box>
       <APIModal setApiKey={setApiKey} sidebar={true} />
       <Flex
@@ -84,7 +84,7 @@ function SidebarContent(props: SidebarContent) {
       >
         <NextAvatar h="34px" w="34px" src={avatar4} me="10px" />
         <Text color={textColor} fontSize="xs" fontWeight="600" me="10px">
-          Adela Parkson
+          Raymond
         </Text>
         <Menu>
           <MenuButton
@@ -143,119 +143,6 @@ function SidebarContent(props: SidebarContent) {
                 >
                   Profile Settings
                 </Text>
-                <Link
-                  ms="auto"
-                  isExternal
-                  href="https://horizon-ui.com/ai-template"
-                >
-                  <Badge
-                    display={{ base: 'flex', lg: 'none', xl: 'flex' }}
-                    colorScheme="brand"
-                    borderRadius="25px"
-                    color="brand.500"
-                    textTransform={'none'}
-                    letterSpacing="0px"
-                    px="8px"
-                  >
-                    PRO
-                  </Badge>
-                </Link>
-              </Flex>
-            </Box>
-            <Box mb="30px">
-              <Flex cursor={'not-allowed'} align="center">
-                <Icon
-                  as={LuHistory}
-                  width="24px"
-                  height="24px"
-                  color={gray}
-                  opacity="0.4"
-                  me="12px"
-                />
-                <Text color={gray} fontWeight="500" fontSize="sm" opacity="0.4">
-                  History
-                </Text>
-                <Link
-                  ms="auto"
-                  isExternal
-                  href="https://horizon-ui.com/ai-template"
-                >
-                  <Badge
-                    display={{ base: 'flex', lg: 'none', xl: 'flex' }}
-                    colorScheme="brand"
-                    borderRadius="25px"
-                    color="brand.500"
-                    textTransform={'none'}
-                    letterSpacing="0px"
-                    px="8px"
-                  >
-                    PRO
-                  </Badge>
-                </Link>
-              </Flex>
-            </Box>
-            <Box mb="30px">
-              <Flex cursor={'not-allowed'} align="center">
-                <Icon
-                  as={RoundedChart}
-                  width="24px"
-                  height="24px"
-                  color={gray}
-                  opacity="0.4"
-                  me="12px"
-                />
-                <Text color={gray} fontWeight="500" fontSize="sm" opacity="0.4">
-                  Usage
-                </Text>
-                <Link
-                  ms="auto"
-                  isExternal
-                  href="https://horizon-ui.com/ai-template"
-                >
-                  <Badge
-                    display={{ base: 'flex', lg: 'none', xl: 'flex' }}
-                    colorScheme="brand"
-                    borderRadius="25px"
-                    color="brand.500"
-                    textTransform={'none'}
-                    letterSpacing="0px"
-                    px="8px"
-                  >
-                    PRO
-                  </Badge>
-                </Link>
-              </Flex>
-            </Box>
-            <Box>
-              <Flex cursor={'not-allowed'} align="center">
-                <Icon
-                  as={IoMdPerson}
-                  width="24px"
-                  height="24px"
-                  color={gray}
-                  opacity="0.4"
-                  me="12px"
-                />
-                <Text color={gray} fontWeight="500" fontSize="sm" opacity="0.4">
-                  My Plan
-                </Text>
-                <Link
-                  ms="auto"
-                  isExternal
-                  href="https://horizon-ui.com/ai-template"
-                >
-                  <Badge
-                    display={{ base: 'flex', lg: 'none', xl: 'flex' }}
-                    colorScheme="brand"
-                    borderRadius="25px"
-                    color="brand.500"
-                    textTransform={'none'}
-                    letterSpacing="0px"
-                    px="8px"
-                  >
-                    PRO
-                  </Badge>
-                </Link>
               </Flex>
             </Box>
           </MenuList>
