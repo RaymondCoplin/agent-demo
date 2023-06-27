@@ -87,7 +87,7 @@ export default function Chat(props: { apiKeyApp: string }) {
       connection.on('thoughts', (response) => {
         if  (!response.text && !response.plan) return;
         
-        let message = `${response.text}\n\nPlan: \n${response.plan}\n`;
+        let message = `${response.text}${response.plan ? '\n\nPlan: \n' + response.plan + '\n' : ''}`;
         // let message = `
         //   Text: ${response.text}\n
         //   Reasoning: ${response.reasoning}\n
@@ -101,7 +101,12 @@ export default function Chat(props: { apiKeyApp: string }) {
       connection.on('respond', (response) => {
         if (response === 'Task completed.') {
           setAgentProjectGuid(null);
+          setLoading(false);
         }
+        addMessage('agent', response);
+      });
+
+      connection.on('ask', (response) => {
         addMessage('agent', response);
         setLoading(false);
       });
@@ -124,7 +129,6 @@ export default function Chat(props: { apiKeyApp: string }) {
     .then((response) => {
       if (response.data.agentProjectGuid) {
         setAgentProjectGuid(response.data.agentProjectGuid);
-        setLoading(false);
       } else {
         addMessage('agent', response.data.response);
         if (response.data.response !== 'Thinking...') {
@@ -174,7 +178,7 @@ export default function Chat(props: { apiKeyApp: string }) {
         <Flex direction="column"
             id="chatbox"
             w="100%"
-            h="700px"
+            h="700vh"
             mx="auto"
             display={'flex'}
             mb={'auto'}
