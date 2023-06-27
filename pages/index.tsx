@@ -178,7 +178,7 @@ export default function Chat(props: { apiKeyApp: string }) {
         <Flex direction="column"
             id="chatbox"
             w="100%"
-            h="700vh"
+            h="700px"
             mx="auto"
             display={'flex'}
             mb={'auto'}
