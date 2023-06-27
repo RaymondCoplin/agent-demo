@@ -42,6 +42,8 @@ export default function Chat(props: { apiKeyApp: string }) {
   const [model, setModel] = useState<OpenAIModel>('gpt-3.5-turbo');
   // Loading state
   const [loading, setLoading] = useState<boolean>(false);
+  // Project ID
+  const [agentProjectGuid, setAgentProjectGuid] = useState<string | null>('');
 
   // API Key
   // const [apiKey, setApiKey] = useState<string>(apiKeyApp);
@@ -78,15 +80,14 @@ export default function Chat(props: { apiKeyApp: string }) {
 
       connection.on('agent_info', (data) => {
         const goals = data.goals.map((goal: string) => `- ${goal}\n`).join('');
-        addMessage('agent', goals);
+        const message = `Goals: \n\n${goals}\n\n`;
+        addMessage('agent', message);
       });
 
       connection.on('thoughts', (response) => {
-        let message = `
-          Text: ${response.text}\n
-          Reasoning: ${response.reasoning}\n
-          Plan: ${response.plan}\n
-        `;
+        if  (!response.text && !response.plan) return;
+        
+        let message = `${response.text}\n\nPlan: \n${response.plan}\n`;
         // let message = `
         //   Text: ${response.text}\n
         //   Reasoning: ${response.reasoning}\n
@@ -98,6 +99,9 @@ export default function Chat(props: { apiKeyApp: string }) {
       });
 
       connection.on('respond', (response) => {
+        if (response === 'Task completed.') {
+          setAgentProjectGuid(null);
+        }
         addMessage('agent', response);
         setLoading(false);
       });
@@ -114,12 +118,18 @@ export default function Chat(props: { apiKeyApp: string }) {
     axios.post('https://localhost:7225/getreplyfromagent', {
       userGUIdString: "4949C1A2-AEA5-4B75-BFEE-A0A80F80032E",
       agentGUIdString: "E8D6B1FD-AA69-41E1-97BE-B9755C1FA7A6",
-      userPrompt: inputCode
+      userPrompt: inputCode,
+      agentProjectGuid: agentProjectGuid || null,
     })
     .then((response) => {
-      addMessage('agent', response.data.agentReply);
-      if (response.data.agentReply !== 'Thinking...') {
+      if (response.data.agentProjectGuid) {
+        setAgentProjectGuid(response.data.agentProjectGuid);
         setLoading(false);
+      } else {
+        addMessage('agent', response.data.response);
+        if (response.data.response !== 'Thinking...') {
+          setLoading(false);
+        }
       }
     })
     .catch((err) => {
