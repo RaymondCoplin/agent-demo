@@ -146,6 +146,12 @@ export default function Chat(props: { apiKeyApp: string }) {
     setInputCode(Event.target.value);
   };
 
+  const handleKeyDown = (event: { key: string; }) => {
+    if (event.key === 'Enter') {
+      handleTranslate();
+    }
+  };
+
   const addMessage = (role: string, message: string) => {
       setChatHistory((prevHistory) => [...prevHistory, { role, message }]);
       let element = document.getElementById('chatbox');
@@ -178,7 +184,7 @@ export default function Chat(props: { apiKeyApp: string }) {
         <Flex direction="column"
             id="chatbox"
             w="100%"
-            h="700px"
+            h={{ base: '81vh' }}
             mx="auto"
             display={'flex'}
             mb={'auto'}
@@ -276,6 +282,7 @@ export default function Chat(props: { apiKeyApp: string }) {
             _placeholder={placeholderColor}
             placeholder="Type your message here..."
             onChange={handleChange}
+            onKeyDown={handleKeyDown}
           />
           <Button
             variant="primary"
