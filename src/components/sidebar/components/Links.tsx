@@ -157,7 +157,7 @@ export function SidebarLinks(props: SidebarLinksProps) {
                       route.icon && route.items
                         ? createLinks(route.items) // for bullet accordion links
                         : route.items
-                        ? createAccordionLinks(route.items)
+                        ? <></>
                         : '' // for non-bullet accordion links
                     }
                   </List>

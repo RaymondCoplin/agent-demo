@@ -66,10 +66,12 @@ export default function Chat(props: { apiKeyApp: string }) {
     { color: 'gray.500' },
     { color: 'whiteAlpha.600' },
   );
+  const AGENT_HUB_URL = `${process.env.NEXT_PUBLIC_SERVER}/agentHub` || 'https://localhost:7225/agentHub';
+  const SERVER_URL = process.env.NEXT_PUBLIC_SERVER || 'https://localhost:7225';
 
   useEffect(() => {
     let connection = new signalR.HubConnectionBuilder()
-      .withUrl('https://localhost:7225/agentHub', {
+      .withUrl(AGENT_HUB_URL, {
         withCredentials: false,
         transport: signalR.HttpTransportType.LongPolling,
       })
@@ -85,6 +87,7 @@ export default function Chat(props: { apiKeyApp: string }) {
       });
 
       connection.on('thoughts', (response) => {
+        console.log(response);
         if  (!response.text && !response.plan) return;
         
         let message = `${response.text}${response.plan ? '\n\nPlan: \n' + response.plan + '\n' : ''}`;
@@ -120,9 +123,9 @@ export default function Chat(props: { apiKeyApp: string }) {
     input.value = '';
 
     setLoading(true);
-    axios.post('https://localhost:7225/getreplyfromagent', {
-      userGUIdString: "4949C1A2-AEA5-4B75-BFEE-A0A80F80032E",
-      agentGUIdString: "E8D6B1FD-AA69-41E1-97BE-B9755C1FA7A6",
+    axios.post(`${SERVER_URL}/getreplyfromagent`, {
+      userGUIdString: process.env.NEXT_PUBLIC_USER_GUID,
+      agentGUIdString: process.env.NEXT_PUBLIC_AGENT_GUID,
       userPrompt: inputCode,
       agentProjectGuid: agentProjectGuid || null,
     })
@@ -155,7 +158,7 @@ export default function Chat(props: { apiKeyApp: string }) {
   const addMessage = (role: string, message: string) => {
       setChatHistory((prevHistory) => [...prevHistory, { role, message }]);
       let element = document.getElementById('chatbox');
-      element.scrollTop = element.scrollHeight + 200;
+      element!.scrollTop = element!.scrollHeight + 200;
   }
 
   return (
